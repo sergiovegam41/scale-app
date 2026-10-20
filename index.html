@@ -150,7 +150,7 @@ footer nav a{padding:4px 8px}
               <p class="for">Android 7 o superior</p>
             </div>
           </div>
-          <a class="btn" id="btn-android" href="https://github.com/sergiovegam41/Scale/releases/download/v0.1.0/Scale-0.1.0-android.apk">
+          <a class="btn" id="btn-android" href="https://github.com/sergiovegam41/Scale/releases/download/v0.2.0/Scale-0.2.0-android.apk">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
             Descargar APK <small data-size="android"></small>
           </a>
@@ -169,7 +169,7 @@ footer nav a{padding:4px 8px}
               <p class="for">Windows 10 y 11 (64 bits)</p>
             </div>
           </div>
-          <a class="btn" id="btn-windows" href="https://github.com/sergiovegam41/Scale/releases/download/v0.1.0/Scale-0.1.0-windows-portable.zip">
+          <a class="btn" id="btn-windows" href="https://github.com/sergiovegam41/Scale/releases/download/v0.2.0/Scale-0.2.0-windows-portable.zip">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
             <span id="label-windows">Descargar para Windows</span> <small data-size="windows"></small>
           </a>
@@ -179,7 +179,7 @@ footer nav a{padding:4px 8px}
           </ol>
         </article>
       </div>
-      <p class="version" id="version">Versión 0.1.0 · <a href="https://github.com/sergiovegam41/Scale/releases">Notas y versiones anteriores</a></p>
+      <p class="version" id="version">Versión 0.2.0 · <a href="https://github.com/sergiovegam41/Scale/releases">Notas y versiones anteriores</a></p>
     </div>
 
     <div class="hero-art">
@@ -292,9 +292,19 @@ footer nav a{padding:4px 8px}
       headers: { Accept: 'application/vnd.github+json' },
     });
     if (!res.ok) return;
-    const release = (await res.json()).find((r) => !r.draft);
+    // La versión más nueva que ya tenga cada archivo subido (mientras un
+    // release se está subiendo, se ofrece el anterior).
+    const releases = (await res.json()).filter((r) => !r.draft);
+    const pick = (suffix) => {
+      for (const r of releases) {
+        const asset = r.assets.find((a) => a.name.endsWith(suffix) && a.state === 'uploaded');
+        if (asset) return { r, asset };
+      }
+      return null;
+    };
+    const find = (suffix) => pick(suffix)?.asset;
+    const release = (pick('-android.apk') || pick('-windows-portable.zip') || {}).r;
     if (!release) return;
-    const find = (suffix) => release.assets.find((a) => a.name.endsWith(suffix));
     const mb = (a) => `${Math.round(a.size / 1048576)} MB`;
 
     const apk = find('-android.apk');
